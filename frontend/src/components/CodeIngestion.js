@@ -1,0 +1,272 @@
+import React, { useState } from 'react';
+import { 
+  Box, Paper, Typography, TextField, Button, 
+  FormControl, InputLabel, Select, MenuItem,
+  Grid, Divider, Slider, FormHelperText
+} from '@mui/material';
+import { UploadFile, Code } from '@mui/icons-material';
+
+const CodeIngestion = ({ setLoading, handleNotification }) => {
+  const [codeInput, setCodeInput] = useState('');
+  const [file, setFile] = useState(null);
+  const [name, setName] = useState('');
+  const [language, setLanguage] = useState('');
+  const [maxTokens, setMaxTokens] = useState(1000);
+  const [overlap, setOverlap] = useState(50);
+  const [taskId, setTaskId] = useState(null);
+  const [taskStatus, setTaskStatus] = useState(null);
+
+  const supportedLanguages = [
+    'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp', 
+    'go', 'rust', 'php', 'ruby', 'swift', 'kotlin', 'scala', 'sql', 
+    'html', 'css', 'bash', 'powershell', 'yaml', 'json', 'xml'
+  ];
+
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      if (!name) {
+        setName(selectedFile.name);
+      }
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!file && !codeInput) {
+      handleNotification('Please provide code input or upload a file', 'error');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    
+    if (file) {
+      formData.append('file', file);
+    } else {
+      formData.append('code', codeInput);
+    }
+    
+    if (name) formData.append('name', name);
+    if (language) formData.append('language', language);
+    formData.append('max_tokens', maxTokens);
+    formData.append('overlap', overlap);
+
+    try {
+      const response = await fetch('http://localhost:8000/ingest/', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        handleNotification('Code submitted for processing', 'success');
+        setTaskId(data.task_id);
+        checkTaskStatus(data.task_id);
+      } else {
+        handleNotification(`Error: ${data.detail || 'Failed to process code'}`, 'error');
+        setLoading(false);
+      }
+    } catch (error) {
+      handleNotification(`Error: ${error.message}`, 'error');
+      setLoading(false);
+    }
+  };
+
+  const checkTaskStatus = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8000/status/${id}`);
+      const data = await response.json();
+      
+      setTaskStatus(data);
+      
+      if (data.status === 'pending' || data.status === 'PROGRESS') {
+        // Check again after 2 seconds
+        setTimeout(() => checkTaskStatus(id), 2000);
+      } else {
+        setLoading(false);
+        if (data.status === 'success') {
+          handleNotification('Code processed successfully', 'success');
+        } else {
+          handleNotification(`Processing failed: ${data.info}`, 'error');
+        }
+      }
+    } catch (error) {
+      setLoading(false);
+      handleNotification(`Error checking task status: ${error.message}`, 'error');
+    }
+  };
+
+  const handleReset = () => {
+    setCodeInput('');
+    setFile(null);
+    setName('');
+    setLanguage('');
+    setMaxTokens(1000);
+    setOverlap(50);
+    setTaskId(null);
+    setTaskStatus(null);
+  };
+
+  return (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        Ingest Code
+      </Typography>
+      
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Name (Optional)"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            margin="normal"
+            helperText="A name for this code snippet"
+          />
+          
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Language (Optional)</InputLabel>
+            <Select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              label="Language (Optional)"
+            >
+              <MenuItem value="">
+                <em>Auto-detect</em>
+              </MenuItem>
+              {supportedLanguages.map((lang) => (
+                <MenuItem key={lang} value={lang}>
+                  {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                </MenuItem>
+              ))}
+            </Select>
+            <FormHelperText>
+              Programming language of the code (will be auto-detected if not specified)
+            </FormHelperText>
+          </FormControl>
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography gutterBottom>
+              Max Tokens per Chunk: {maxTokens}
+            </Typography>
+            <Slider
+              value={maxTokens}
+              onChange={(e, newValue) => setMaxTokens(newValue)}
+              min={100}
+              max={2000}
+              step={100}
+              valueLabelDisplay="auto"
+            />
+            <FormHelperText>
+              Maximum number of tokens per chunk when splitting code
+            </FormHelperText>
+          </Box>
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography gutterBottom>
+              Overlap: {overlap}
+            </Typography>
+            <Slider
+              value={overlap}
+              onChange={(e, newValue) => setOverlap(newValue)}
+              min={0}
+              max={200}
+              step={10}
+              valueLabelDisplay="auto"
+            />
+            <FormHelperText>
+              Number of overlapping tokens between chunks
+            </FormHelperText>
+          </Box>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <TextField
+              label="Code Input"
+              multiline
+              rows={10}
+              fullWidth
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value)}
+              margin="normal"
+              placeholder="Paste your code here..."
+              disabled={!!file}
+            />
+            
+            <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
+              Or
+            </Typography>
+            
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFile />}
+              sx={{ mt: 1 }}
+              disabled={!!codeInput}
+            >
+              Upload File
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+              />
+            </Button>
+            
+            {file && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Selected file: {file.name}
+              </Typography>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
+      
+      <Divider sx={{ my: 3 }} />
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleSubmit}
+          startIcon={<Code />}
+          disabled={(!file && !codeInput) || !!taskId}
+        >
+          Process Code
+        </Button>
+        
+        <Button 
+          variant="outlined" 
+          onClick={handleReset}
+        >
+          Reset
+        </Button>
+      </Box>
+      
+      {taskId && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle1">
+            Task Status:
+          </Typography>
+          <Typography variant="body2">
+            Task ID: {taskId}
+          </Typography>
+          <Typography variant="body2">
+            Status: {taskStatus?.status || 'Checking...'}
+          </Typography>
+          {taskStatus?.info && (
+            <Typography variant="body2">
+              Info: {typeof taskStatus.info === 'object' 
+                ? JSON.stringify(taskStatus.info) 
+                : taskStatus.info}
+            </Typography>
+          )}
+        </Box>
+      )}
+    </Paper>
+  );
+};
+
+export default CodeIngestion;
