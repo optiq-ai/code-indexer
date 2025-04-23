@@ -2,11 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: optiq
-      POSTGRES_PASSWORD: secure_password
-      POSTGRES_DB: code_index
+    build: ./db
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
