@@ -19,6 +19,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+    command: ["./wait-for-db.sh", "db", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--reload"]
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
@@ -34,7 +35,7 @@ services:
 
   celery_worker:
     build: ./backend
-    command: python celery_worker.py
+    command: ["./wait-for-db.sh", "db", "python", "celery_worker.py"]
     volumes:
       - ./backend:/app
     environment:
