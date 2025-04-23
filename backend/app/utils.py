@@ -28,7 +28,7 @@ def detect_language(code: str) -> str:
     # Simple language detection based on file extensions and patterns
     patterns = {
         "python": [r"import\s+[a-zA-Z0-9_]+", r"from\s+[a-zA-Z0-9_\.]+\s+import", r"def\s+[a-zA-Z0-9_]+\s*\(", r"class\s+[a-zA-Z0-9_]+\s*:"],
-        "javascript": [r"const\s+[a-zA-Z0-9_]+\s*=", r"let\s+[a-zA-Z0-9_]+\s*=", r"function\s+[a-zA-Z0-9_]+\s*\(", r"import\s+.*\s+from\s+['\""]"],
+        "javascript": [r"const\s+[a-zA-Z0-9_]+\s*=", r"let\s+[a-zA-Z0-9_]+\s*=", r"function\s+[a-zA-Z0-9_]+\s*\(", r"import\s+.*\s+from\s+['\"].*['\"]"],
         "typescript": [r"interface\s+[a-zA-Z0-9_]+", r"type\s+[a-zA-Z0-9_]+\s*=", r"class\s+[a-zA-Z0-9_]+\s*implements"],
         "java": [r"public\s+class", r"private\s+[a-zA-Z0-9_<>]+\s+[a-zA-Z0-9_]+", r"package\s+[a-zA-Z0-9_\.]+;"],
         "c": [r"#include\s+<[a-zA-Z0-9_\.]+>", r"void\s+[a-zA-Z0-9_]+\s*\(", r"int\s+main\s*\("],

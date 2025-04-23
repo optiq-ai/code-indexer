@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from app.config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 from celery import Celery
 import logging
@@ -26,4 +27,7 @@ app.conf.update(
 
 if __name__ == "__main__":
     logger.info("Starting Celery worker...")
-    app.start()
+    # Use the proper Celery worker command instead of app.start()
+    import sys
+    sys.argv = ['celery', 'worker', '--loglevel=info']
+    app.worker_main()
