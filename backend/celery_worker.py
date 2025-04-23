@@ -2,6 +2,7 @@
 from app.config import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 from celery import Celery
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +28,7 @@ app.conf.update(
 
 if __name__ == "__main__":
     logger.info("Starting Celery worker...")
-    # Use the proper Celery worker command instead of app.start()
-    import sys
-    sys.argv = ['celery', 'worker', '--loglevel=info']
-    app.worker_main()
+    # Use direct worker execution instead of command-line approach
+    from celery.bin import worker
+    worker = worker.worker(app=app)
+    worker.execute_from_commandline(argv=['worker', '--loglevel=info'])

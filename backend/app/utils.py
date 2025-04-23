@@ -37,7 +37,7 @@ def detect_language(code: str) -> str:
         "go": [r"package\s+[a-zA-Z0-9_]+", r"func\s+[a-zA-Z0-9_]+\s*\(", r"import\s+\("],
         "rust": [r"fn\s+[a-zA-Z0-9_]+", r"let\s+mut", r"use\s+[a-zA-Z0-9_:]+"],
         "php": [r"<\?php", r"\$[a-zA-Z0-9_]+\s*=", r"function\s+[a-zA-Z0-9_]+\s*\("],
-        "ruby": [r"def\s+[a-zA-Z0-9_]+", r"require\s+['\""][a-zA-Z0-9_]+['\""]", r"class\s+[a-zA-Z0-9_]+\s*<"],
+        "ruby": [r"def\s+[a-zA-Z0-9_]+", r"require\s+['\"][a-zA-Z0-9_]+['\"]", r"class\s+[a-zA-Z0-9_]+\s*<"],
         "html": [r"<!DOCTYPE\s+html>", r"<html", r"<head", r"<body"],
         "css": [r"[a-zA-Z0-9_\-\.#]+\s*\{", r"@media", r"@import"],
         "sql": [r"SELECT\s+.*\s+FROM", r"INSERT\s+INTO", r"CREATE\s+TABLE", r"ALTER\s+TABLE"],
