@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Box, Paper, Typography, Button, 
-  Grid, Divider, Card, CardContent, 
+  Grid, Card, CardContent, 
   CardActions, TextField, Slider,
-  FormControl, InputLabel, Select, MenuItem,
   List, ListItem, ListItemText, Chip,
   Dialog, DialogTitle, DialogContent,
   DialogContentText, DialogActions

@@ -5,12 +5,11 @@ import {
   CardActions, TextField, List, ListItem,
   ListItemText, Chip, Dialog, DialogTitle,
   DialogContent, DialogContentText, DialogActions,
-  FormControl, InputLabel, Select, MenuItem,
   IconButton, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow
 } from '@mui/material';
 import { 
-  Add, Delete, Edit, Save,
+  Add, Save,
   PlayArrow, Visibility, VisibilityOff
 } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -34,7 +33,7 @@ const TemplateManagement = ({
   // Fetch templates on component mount
   useEffect(() => {
     fetchTemplates();
-  }, []);
+  }, [fetchTemplates]);
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -464,7 +463,7 @@ const TemplateManagement = ({
           </List>
           
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Tip: You can use placeholders like {'{{$paramName}}'} in your code chunks to create customizable templates.
+            Tip: You can use placeholders like {{$paramName}} in your code to create customizable templates.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -486,16 +485,16 @@ const TemplateManagement = ({
       >
         <DialogTitle>Apply Template: {selectedTemplate?.name}</DialogTitle>
         <DialogContent>
+          <DialogContentText paragraph>
+            Fill in the parameters to apply this template and generate new code.
+          </DialogContentText>
+          
           {parameterKeys.length > 0 ? (
             <Box>
-              <DialogContentText paragraph>
-                Fill in the parameters to apply this template and generate new code.
-              </DialogContentText>
-              
               {parameterKeys.map((key) => (
                 <TextField
                   key={key}
-                  label={`Parameter: ${key}`}
+                  label={key}
                   fullWidth
                   value={parameters[key] || ''}
                   onChange={(e) => handleParameterChange(key, e.target.value)}
@@ -505,9 +504,9 @@ const TemplateManagement = ({
               ))}
             </Box>
           ) : (
-            <DialogContentText>
-              This template has no parameters. Click "Apply" to generate code from this template.
-            </DialogContentText>
+            <Typography variant="body2" color="text.secondary">
+              This template has no customizable parameters.
+            </Typography>
           )}
         </DialogContent>
         <DialogActions>
