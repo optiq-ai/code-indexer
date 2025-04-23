@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package.json and yarn.lock
 COPY package.json yarn.lock ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile
+# Install dependencies with network timeout instead of frozen lockfile
+RUN yarn install --network-timeout 600000
 
 # Copy application code
 COPY . .
