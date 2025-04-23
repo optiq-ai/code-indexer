@@ -463,7 +463,7 @@ const TemplateManagement = ({
           </List>
           
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Tip: You can use placeholders like {{$paramName}} in your code to create customizable templates.
+            Tip: You can use placeholders like {'{'}{'{'}'$parameterName'{'}'}{'}'}' in your code to create customizable templates.
           </Typography>
         </DialogContent>
         <DialogActions>
