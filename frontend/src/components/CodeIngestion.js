@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, Paper, Typography, TextField, Button, 
   FormControl, InputLabel, Select, MenuItem,
@@ -6,7 +6,13 @@ import {
 } from '@mui/material';
 import { UploadFile, Code } from '@mui/icons-material';
 
-const CodeIngestion = ({ setLoading, handleNotification }) => {
+const CodeIngestion = ({ 
+  setLoading, 
+  handleNotification, 
+  addTask, 
+  updateTaskStatus, 
+  removeTask 
+}) => {
   const [codeInput, setCodeInput] = useState('');
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
@@ -14,7 +20,6 @@ const CodeIngestion = ({ setLoading, handleNotification }) => {
   const [maxTokens, setMaxTokens] = useState(1000);
   const [overlap, setOverlap] = useState(50);
   const [taskId, setTaskId] = useState(null);
-  const [taskStatus, setTaskStatus] = useState(null);
 
   const supportedLanguages = [
     'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp', 
@@ -62,8 +67,16 @@ const CodeIngestion = ({ setLoading, handleNotification }) => {
       
       if (response.ok) {
         handleNotification('Code submitted for processing', 'success');
-        setTaskId(data.task_id);
-        checkTaskStatus(data.task_id);
+        const newTaskId = data.task_id;
+        setTaskId(newTaskId);
+        
+        // Add task to global state
+        addTask(newTaskId, 'pending', {
+          name: name || (file ? file.name : 'Code snippet'),
+          type: 'code_processing'
+        });
+        
+        checkTaskStatus(newTaskId);
       } else {
         handleNotification(`Error: ${data.detail || 'Failed to process code'}`, 'error');
         setLoading(false);
@@ -79,9 +92,10 @@ const CodeIngestion = ({ setLoading, handleNotification }) => {
       const response = await fetch(`http://localhost:8000/status/${id}`);
       const data = await response.json();
       
-      setTaskStatus(data);
+      // Update task status in global state
+      updateTaskStatus(id, data.status, data.info);
       
-      if (data.status === 'pending' || data.status === 'PROGRESS') {
+      if (data.status === 'pending' || data.status === 'STARTED' || data.status === 'PROGRESS') {
         // Check again after 2 seconds
         setTimeout(() => checkTaskStatus(id), 2000);
       } else {
@@ -94,6 +108,7 @@ const CodeIngestion = ({ setLoading, handleNotification }) => {
       }
     } catch (error) {
       setLoading(false);
+      updateTaskStatus(id, 'error', error.message);
       handleNotification(`Error checking task status: ${error.message}`, 'error');
     }
   };
@@ -105,8 +120,12 @@ const CodeIngestion = ({ setLoading, handleNotification }) => {
     setLanguage('');
     setMaxTokens(1000);
     setOverlap(50);
-    setTaskId(null);
-    setTaskStatus(null);
+    
+    // Remove task from global state if exists
+    if (taskId) {
+      removeTask(taskId);
+      setTaskId(null);
+    }
   };
 
   return (
@@ -244,27 +263,6 @@ const CodeIngestion = ({ setLoading, handleNotification }) => {
           Reset
         </Button>
       </Box>
-      
-      {taskId && (
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle1">
-            Task Status:
-          </Typography>
-          <Typography variant="body2">
-            Task ID: {taskId}
-          </Typography>
-          <Typography variant="body2">
-            Status: {taskStatus?.status || 'Checking...'}
-          </Typography>
-          {taskStatus?.info && (
-            <Typography variant="body2">
-              Info: {typeof taskStatus.info === 'object' 
-                ? JSON.stringify(taskStatus.info) 
-                : taskStatus.info}
-            </Typography>
-          )}
-        </Box>
-      )}
     </Paper>
   );
 };

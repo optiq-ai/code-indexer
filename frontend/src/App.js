@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, Typography, AppBar, Toolbar, 
   Tab, Tabs, Paper, CircularProgress, Snackbar, Alert
@@ -7,6 +7,7 @@ import CodeIngestion from './components/CodeIngestion';
 import CodeSearch from './components/CodeSearch';
 import ChunkManipulation from './components/ChunkManipulation';
 import TemplateManagement from './components/TemplateManagement';
+import TaskStatusBar from './components/TaskStatusBar';
 
 function App() {
   const [tabValue, setTabValue] = useState(0);
@@ -14,6 +15,7 @@ function App() {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [searchResults, setSearchResults] = useState([]);
   const [selectedChunks, setSelectedChunks] = useState([]);
+  const [tasks, setTasks] = useState([]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -34,6 +36,61 @@ function App() {
       setSelectedChunks([...selectedChunks, chunk]);
     }
   };
+  
+  // Add task to global task list
+  const addTask = (taskId, status = 'pending', info = null) => {
+    setTasks(prevTasks => {
+      // Check if task already exists
+      const existingTaskIndex = prevTasks.findIndex(task => task.id === taskId);
+      
+      if (existingTaskIndex >= 0) {
+        // Update existing task
+        const updatedTasks = [...prevTasks];
+        updatedTasks[existingTaskIndex] = { 
+          ...updatedTasks[existingTaskIndex],
+          status,
+          info,
+          lastUpdated: new Date()
+        };
+        return updatedTasks;
+      } else {
+        // Add new task
+        return [...prevTasks, { 
+          id: taskId, 
+          status, 
+          info,
+          lastUpdated: new Date()
+        }];
+      }
+    });
+  };
+  
+  // Update task status
+  const updateTaskStatus = (taskId, status, info = null) => {
+    addTask(taskId, status, info);
+  };
+  
+  // Remove task from list
+  const removeTask = (taskId) => {
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+  };
+  
+  // Clean up completed tasks older than 1 hour
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      
+      setTasks(prevTasks => 
+        prevTasks.filter(task => 
+          ['pending', 'STARTED', 'PROGRESS'].includes(task.status) || 
+          !task.lastUpdated || 
+          new Date(task.lastUpdated) > oneHourAgo
+        )
+      );
+    }, 15 * 60 * 1000); // Check every 15 minutes
+    
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -46,6 +103,8 @@ function App() {
       </AppBar>
       
       <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <TaskStatusBar tasks={tasks} />
+        
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography variant="h5" gutterBottom>
             Intelligent Code Library
@@ -69,7 +128,10 @@ function App() {
         {tabValue === 0 && (
           <CodeIngestion 
             setLoading={setLoading} 
-            handleNotification={handleNotification} 
+            handleNotification={handleNotification}
+            addTask={addTask}
+            updateTaskStatus={updateTaskStatus}
+            removeTask={removeTask}
           />
         )}
         
