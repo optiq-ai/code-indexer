@@ -164,7 +164,7 @@ def search_code(
     results = (
         base_query
         .order_by(
-            func.cosine_distance(CodeChunk.embedding, query_embedding).asc()
+            CodeChunk.embedding.op("<=>")(query_embedding).asc()
         )
         .limit(limit)
         .all()
