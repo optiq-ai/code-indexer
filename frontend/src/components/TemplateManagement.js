@@ -30,8 +30,8 @@ const TemplateManagement = ({
   const [parameterKeys, setParameterKeys] = useState([]);
   const [viewTemplateCode, setViewTemplateCode] = useState(false);
 
-  // Define fetchTemplates with useCallback to avoid dependency issues
-  const fetchTemplates = useCallback(async () => {
+  // Define fetchTemplates function without useCallback to prevent infinite loop
+  const fetchTemplates = async () => {
     setLoading(true);
     try {
       const response = await fetch('http://localhost:8000/templates/');
@@ -47,12 +47,13 @@ const TemplateManagement = ({
     } finally {
       setLoading(false);
     }
-  }, [setLoading, handleNotification]);
+  };
 
-  // Fetch templates on component mount
+  // Fetch templates on component mount only
   useEffect(() => {
     fetchTemplates();
-  }, [fetchTemplates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Original fetchTemplates function removed to fix duplicate declaration
   
