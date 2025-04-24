@@ -8,7 +8,7 @@ import {
 import { UploadFile, Code, ExpandMore, ExpandLess, ContentCopy } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { useTranslation } from 'react-i18next';
+// useTranslation import removed as it's not used in this component
 
 const CodeIngestion = ({ 
   setLoading, 
@@ -17,7 +17,7 @@ const CodeIngestion = ({
   updateTaskStatus, 
   removeTask 
 }) => {
-  const { t } = useTranslation();
+  // Używamy useTranslation() do tłumaczeń w komponencie
   const [codeInput, setCodeInput] = useState('');
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');

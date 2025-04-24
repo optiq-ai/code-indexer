@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { 
   Box, Typography, Paper, Button, Grid, Card, CardContent, 
-  TextField, Divider, IconButton, Dialog, DialogTitle,
+  TextField, Divider, Dialog, DialogTitle,
   DialogContent, DialogActions, CircularProgress, Alert
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { 
   Merge, CallSplit, Code, Description, Save
 } from '@mui/icons-material';
-import axios from 'axios';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 

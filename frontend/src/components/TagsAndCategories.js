@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { 
   Box, Typography, Paper, Button, Grid, Card, CardContent, 
-  TextField, Chip, Autocomplete, List, ListItem, ListItemText,
-  ListItemIcon, Divider, IconButton, Dialog, DialogTitle,
+  TextField, Chip, Autocomplete, Dialog, DialogTitle,
   DialogContent, DialogActions, CircularProgress, Alert
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { 
-  Label, Category, Add, Delete, Edit, Save, Close
+  Label, Add, Save
 } from '@mui/icons-material';
-import axios from 'axios';
+// axios import removed as it's not used in this component
 
 const TagsAndCategories = ({ selectedChunks, setLoading, handleNotification }) => {
   const { t } = useTranslation();

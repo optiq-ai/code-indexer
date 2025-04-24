@@ -6,48 +6,17 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { 
-  CheckCircle, Error, Warning, Info, 
-  Security, Speed, Build, Code
+  Info, Security, Speed, Build
 } from '@mui/icons-material';
-import axios from 'axios';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+// axios import removed as it's not used in this component
 
 const CodeAnalysis = ({ selectedChunks, setLoading, handleNotification }) => {
   const { t } = useTranslation();
   const [analysisResults, setAnalysisResults] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  const analyzeCode = async () => {
-    if (selectedChunks.length === 0) {
-      handleNotification(t('selectChunksToAnalyze'), 'warning');
-      return;
-    }
-
-    setAnalyzing(true);
-    setLoading(true);
-
-    try {
-      // Przygotuj dane do analizy
-      const codeToAnalyze = selectedChunks.map(chunk => ({
-        id: chunk.id,
-        code: chunk.code,
-        language: chunk.language
-      }));
-
-      // Wywołaj API analizy kodu
-      const response = await axios.post('/api/analyze', { chunks: codeToAnalyze });
-      
-      setAnalysisResults(response.data);
-      handleNotification(t('analysisComplete'), 'success');
-    } catch (error) {
-      console.error('Error analyzing code:', error);
-      handleNotification(t('errorOccurred') + ': ' + (error.response?.data?.message || error.message), 'error');
-    } finally {
-      setAnalyzing(false);
-      setLoading(false);
-    }
-  };
+  // Funkcja analyzeCode została usunięta, ponieważ nie jest używana
+  // Zamiast niej używamy simulateAnalysis
 
   // Funkcja pomocnicza do renderowania ikon na podstawie typu problemu
   const getIssueIcon = (issueType) => {

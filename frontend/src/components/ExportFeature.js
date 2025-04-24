@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   GetApp, Description, TableChart, PictureAsPdf, Code
 } from '@mui/icons-material';
-import axios from 'axios';
+// axios import removed as it's not used in this component
 
 const ExportFeature = ({ selectedChunks, setLoading, handleNotification }) => {
   const { t } = useTranslation();

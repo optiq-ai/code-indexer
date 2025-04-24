@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, Typography, AppBar, Toolbar, 
-  Tab, Tabs, Paper, CircularProgress, Snackbar, Alert,
-  Divider
+  Tab, Tabs, Paper, CircularProgress, Snackbar, Alert
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import CodeIngestion from './components/CodeIngestion';
@@ -14,7 +13,6 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import CodeAnalysis from './components/CodeAnalysis';
 import ExportFeature from './components/ExportFeature';
 import TagsAndCategories from './components/TagsAndCategories';
-import EnhancedChunkManipulation from './components/EnhancedChunkManipulation';
 
 function App() {
   const { t } = useTranslation();
