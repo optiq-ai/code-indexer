@@ -103,8 +103,12 @@ const CodeIngestion = ({
       const data = await response.json();
       
       if (response.ok) {
-        // Filter to only include the exact chunks we want
-        const filteredChunks = data.filter(chunk => chunkIds.includes(chunk.id));
+        // Convert all IDs to numbers for consistent comparison
+        const chunkIdsAsNumbers = chunkIds.map(id => Number(id));
+        // Filter to only include the exact chunks we want, ensuring type consistency
+        const filteredChunks = data.filter(chunk => chunkIdsAsNumbers.includes(Number(chunk.id)));
+        console.log('Received chunks:', data);
+        console.log('Filtered chunks:', filteredChunks);
         setProcessedChunks(filteredChunks);
         handleNotification(`Loaded ${filteredChunks.length} processed code fragments`, 'success');
       } else {
