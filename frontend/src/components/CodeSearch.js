@@ -8,6 +8,7 @@ import {
 import { Search, Code, ContentCopy, Add, ExpandMore, ExpandLess } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { useTranslation } from 'react-i18next';
 
 const CodeSearch = ({ 
   setLoading, 
@@ -17,6 +18,7 @@ const CodeSearch = ({
   selectedChunks,
   handleSelectChunk
 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [language, setLanguage] = useState('');
   const [limit, setLimit] = useState(10);
@@ -30,7 +32,7 @@ const CodeSearch = ({
 
   const handleSearch = async () => {
     if (!query) {
-      handleNotification('Please enter a search query', 'error');
+      handleNotification(t('pleaseEnterSearchQuery'), 'error');
       return;
     }
 
@@ -46,12 +48,12 @@ const CodeSearch = ({
       
       if (response.ok) {
         setSearchResults(data);
-        handleNotification(`Found ${data.length} results`, 'success');
+        handleNotification(t('foundResults', { count: data.length }), 'success');
       } else {
-        handleNotification(`Error: ${data.detail || 'Failed to search code'}`, 'error');
+        handleNotification(`${t('error')}: ${data.detail || t('failedToSearchCode')}`, 'error');
       }
     } catch (error) {
-      handleNotification(`Error: ${error.message}`, 'error');
+      handleNotification(`${t('error')}: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ const CodeSearch = ({
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
-    handleNotification('Code copied to clipboard', 'success');
+    handleNotification(t('codeCopiedToClipboard'), 'success');
   };
 
   const handleExpandChunk = (id) => {
@@ -73,31 +75,31 @@ const CodeSearch = ({
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Search Code
+        {t('searchCode')}
       </Typography>
       
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
           <TextField
-            label="Search Query"
+            label={t('searchQuery')}
             fullWidth
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             margin="normal"
-            placeholder="Enter semantic search query..."
+            placeholder={t('enterSearchQuery')}
           />
         </Grid>
         
         <Grid item xs={12} md={4}>
           <FormControl fullWidth margin="normal">
-            <InputLabel>Language (Optional)</InputLabel>
+            <InputLabel>{t('languageOptional')}</InputLabel>
             <Select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              label="Language (Optional)"
+              label={t('languageOptional')}
             >
               <MenuItem value="">
-                <em>All Languages</em>
+                <em>{t('allLanguages')}</em>
               </MenuItem>
               {supportedLanguages.map((lang) => (
                 <MenuItem key={lang} value={lang}>
@@ -117,15 +119,15 @@ const CodeSearch = ({
           startIcon={<Search />}
           disabled={!query}
         >
-          Search
+          {t('search')}
         </Button>
         
         <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>Results Limit</InputLabel>
+          <InputLabel>{t('resultsLimit')}</InputLabel>
           <Select
             value={limit}
             onChange={(e) => setLimit(e.target.value)}
-            label="Results Limit"
+            label={t('resultsLimit')}
             size="small"
           >
             <MenuItem value={5}>5</MenuItem>
@@ -156,7 +158,7 @@ const CodeSearch = ({
                     />
                     {chunk.incomplete && (
                       <Chip 
-                        label="Incomplete" 
+                        label={t('incomplete')} 
                         size="small" 
                         color="warning" 
                       />
@@ -187,7 +189,7 @@ const CodeSearch = ({
                   startIcon={expandedChunk === chunk.id ? <ExpandLess /> : <ExpandMore />}
                   onClick={() => handleExpandChunk(chunk.id)}
                 >
-                  {expandedChunk === chunk.id ? 'Hide Code' : 'Show Code'}
+                  {expandedChunk === chunk.id ? t('hideCode') : t('showCode')}
                 </Button>
                 
                 <Button 
@@ -195,7 +197,7 @@ const CodeSearch = ({
                   startIcon={<ContentCopy />}
                   onClick={() => handleCopyCode(chunk.raw)}
                 >
-                  Copy
+                  {t('copy')}
                 </Button>
                 
                 <Button 
@@ -204,7 +206,7 @@ const CodeSearch = ({
                   color={isChunkSelected(chunk.id) ? "error" : "primary"}
                   onClick={() => handleSelectChunk(chunk)}
                 >
-                  {isChunkSelected(chunk.id) ? 'Deselect' : 'Select'}
+                  {isChunkSelected(chunk.id) ? t('deselect') : t('select')}
                 </Button>
               </CardActions>
             </Card>
@@ -214,7 +216,7 @@ const CodeSearch = ({
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Code sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.5 }} />
           <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-            No search results yet. Try searching for code snippets.
+            {t('noSearchResultsYet')}
           </Typography>
         </Box>
       )}

@@ -8,7 +8,7 @@ import {
 import { UploadFile, Code, ExpandMore, ExpandLess, ContentCopy } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-// useTranslation import removed as it's not used in this component
+import { useTranslation } from 'react-i18next';
 
 const CodeIngestion = ({ 
   setLoading, 
@@ -17,7 +17,7 @@ const CodeIngestion = ({
   updateTaskStatus, 
   removeTask 
 }) => {
-  // Używamy useTranslation() do tłumaczeń w komponencie
+  const { t } = useTranslation();
   const [codeInput, setCodeInput] = useState('');
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
@@ -46,7 +46,7 @@ const CodeIngestion = ({
 
   const handleSubmit = async () => {
     if (!file && !codeInput) {
-      handleNotification('Please provide code input or upload a file', 'error');
+      handleNotification(t('provideCodeOrFile'), 'error');
       return;
     }
 
@@ -73,23 +73,23 @@ const CodeIngestion = ({
       const data = await response.json();
       
       if (response.ok) {
-        handleNotification('Code submitted for processing', 'success');
+        handleNotification(t('codeSubmittedForProcessing'), 'success');
         const newTaskId = data.task_id;
         setTaskId(newTaskId);
         
         // Add task to global state
         addTask(newTaskId, 'pending', {
-          name: name || (file ? file.name : 'Code snippet'),
+          name: name || (file ? file.name : t('codeSnippet')),
           type: 'code_processing'
         });
         
         checkTaskStatus(newTaskId);
       } else {
-        handleNotification(`Error: ${data.detail || 'Failed to process code'}`, 'error');
+        handleNotification(`${t('error')}: ${data.detail || t('failedToProcessCode')}`, 'error');
         setLoading(false);
       }
     } catch (error) {
-      handleNotification(`Error: ${error.message}`, 'error');
+      handleNotification(`${t('error')}: ${error.message}`, 'error');
       setLoading(false);
     }
   };
@@ -112,12 +112,12 @@ const CodeIngestion = ({
         console.log('Received chunks:', data);
         console.log('Filtered chunks:', filteredChunks);
         setProcessedChunks(filteredChunks);
-        handleNotification(`Loaded ${filteredChunks.length} processed code fragments`, 'success');
+        handleNotification(t('loadedProcessedFragments', { count: filteredChunks.length }), 'success');
       } else {
-        handleNotification(`Error: ${data.detail || 'Failed to fetch processed chunks'}`, 'error');
+        handleNotification(`${t('error')}: ${data.detail || t('failedToFetchChunks')}`, 'error');
       }
     } catch (error) {
-      handleNotification(`Error: ${error.message}`, 'error');
+      handleNotification(`${t('error')}: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -137,20 +137,20 @@ const CodeIngestion = ({
       } else {
         setLoading(false);
         if (data.status === 'success') {
-          handleNotification('Code processed successfully', 'success');
+          handleNotification(t('codeProcessedSuccessfully'), 'success');
           
           // If processing was successful and we have chunk IDs, fetch the processed chunks
           if (data.info && data.info.chunk_ids && data.info.chunk_ids.length > 0) {
             fetchProcessedChunks(data.info.chunk_ids);
           }
         } else {
-          handleNotification(`Processing failed: ${data.info}`, 'error');
+          handleNotification(`${t('processingFailed')}: ${data.info}`, 'error');
         }
       }
     } catch (error) {
       setLoading(false);
       updateTaskStatus(id, 'error', error.message);
-      handleNotification(`Error checking task status: ${error.message}`, 'error');
+      handleNotification(`${t('errorCheckingTaskStatus')}: ${error.message}`, 'error');
     }
   };
 
@@ -176,35 +176,35 @@ const CodeIngestion = ({
   
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
-    handleNotification('Code copied to clipboard', 'success');
+    handleNotification(t('codeCopiedToClipboard'), 'success');
   };
 
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Ingest Code
+        {t('codeIngestionTitle')}
       </Typography>
       
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
-            label="Name (Optional)"
+            label={t('nameOptional')}
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
             margin="normal"
-            helperText="A name for this code snippet"
+            helperText={t('nameHelperText')}
           />
           
           <FormControl fullWidth margin="normal">
-            <InputLabel>Language (Optional)</InputLabel>
+            <InputLabel>{t('languageOptional')}</InputLabel>
             <Select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              label="Language (Optional)"
+              label={t('languageOptional')}
             >
               <MenuItem value="">
-                <em>Auto-detect</em>
+                <em>{t('autoDetect')}</em>
               </MenuItem>
               {supportedLanguages.map((lang) => (
                 <MenuItem key={lang} value={lang}>
@@ -213,13 +213,13 @@ const CodeIngestion = ({
               ))}
             </Select>
             <FormHelperText>
-              Programming language of the code (will be auto-detected if not specified)
+              {t('languageHelperText')}
             </FormHelperText>
           </FormControl>
           
           <Box sx={{ mt: 3 }}>
             <Typography gutterBottom>
-              Max Tokens per Chunk: {maxTokens}
+              {t('maxTokensPerChunk', { maxTokens })}
             </Typography>
             <Slider
               value={maxTokens}
@@ -230,13 +230,13 @@ const CodeIngestion = ({
               valueLabelDisplay="auto"
             />
             <FormHelperText>
-              Maximum number of tokens per chunk when splitting code
+              {t('maxTokensHelperText')}
             </FormHelperText>
           </Box>
           
           <Box sx={{ mt: 3 }}>
             <Typography gutterBottom>
-              Overlap: {overlap}
+              {t('overlap', { overlap })}
             </Typography>
             <Slider
               value={overlap}
@@ -247,7 +247,7 @@ const CodeIngestion = ({
               valueLabelDisplay="auto"
             />
             <FormHelperText>
-              Number of overlapping tokens between chunks
+              {t('overlapHelperText')}
             </FormHelperText>
           </Box>
         </Grid>
@@ -255,19 +255,19 @@ const CodeIngestion = ({
         <Grid item xs={12} md={6}>
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <TextField
-              label="Code Input"
+              label={t('codeInput')}
               multiline
               rows={10}
               fullWidth
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value)}
               margin="normal"
-              placeholder="Paste your code here..."
+              placeholder={t('enterCodeHere')}
               disabled={!!file}
             />
             
             <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
-              Or
+              {t('or')}
             </Typography>
             
             <Button
@@ -277,7 +277,7 @@ const CodeIngestion = ({
               sx={{ mt: 1 }}
               disabled={!!codeInput}
             >
-              Upload File
+              {t('uploadFile')}
               <input
                 type="file"
                 hidden
@@ -287,7 +287,7 @@ const CodeIngestion = ({
             
             {file && (
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Selected file: {file.name}
+                {t('selectedFile', { fileName: file.name })}
               </Typography>
             )}
           </Box>
@@ -304,14 +304,14 @@ const CodeIngestion = ({
           startIcon={<Code />}
           disabled={(!file && !codeInput) || !!taskId}
         >
-          Process Code
+          {t('processCode')}
         </Button>
         
         <Button 
           variant="outlined" 
           onClick={handleReset}
         >
-          Reset
+          {t('reset')}
         </Button>
       </Box>
       
@@ -321,7 +321,7 @@ const CodeIngestion = ({
           <Divider sx={{ my: 3 }} />
           
           <Typography variant="h6" gutterBottom>
-            Processed Code Fragments ({processedChunks.length})
+            {t('processedCodeFragments', { count: processedChunks.length })}
           </Typography>
           
           <List sx={{ mt: 2 }}>
@@ -341,7 +341,7 @@ const CodeIngestion = ({
                       />
                       {chunk.incomplete && (
                         <Chip 
-                          label="Incomplete" 
+                          label={t('incomplete')} 
                           size="small" 
                           color="warning" 
                         />
@@ -359,7 +359,7 @@ const CodeIngestion = ({
                     onClick={() => handleExpandChunk(chunk.id)}
                     sx={{ mt: 1 }}
                   >
-                    {expandedChunk === chunk.id ? 'Hide Code' : 'Show Code'}
+                    {expandedChunk === chunk.id ? t('hideCode') : t('showCode')}
                   </Button>
                   
                   <Collapse in={expandedChunk === chunk.id} timeout="auto" unmountOnExit>
@@ -378,7 +378,7 @@ const CodeIngestion = ({
                         onClick={() => handleCopyCode(chunk.raw)}
                         sx={{ mt: 1 }}
                       >
-                        Copy Code
+                        {t('copyCode')}
                       </Button>
                     </Box>
                   </Collapse>
