@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Box, Paper, Typography, TextField, Button, 
   FormControl, InputLabel, Select, MenuItem,
   Grid, Divider, List, Chip, Card,
-  CardContent, CardActions, Collapse
+  CardContent, CardActions, Collapse,
+  Tooltip, IconButton
 } from '@mui/material';
-import { Search, Code, ContentCopy, Add, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { 
+  Search, Code, ContentCopy, Add, ExpandMore, ExpandLess,
+  TextFields, FormatColorText
+} from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { useTranslation } from 'react-i18next';
@@ -23,12 +27,32 @@ const CodeSearch = ({
   const [language, setLanguage] = useState('');
   const [limit, setLimit] = useState(10);
   const [expandedChunk, setExpandedChunk] = useState(null);
+  const [selectedText, setSelectedText] = useState('');
+  const codeRefs = useRef({});
 
   const supportedLanguages = [
     'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp', 
     'go', 'rust', 'php', 'ruby', 'swift', 'kotlin', 'scala', 'sql', 
     'html', 'css', 'bash', 'powershell', 'yaml', 'json', 'xml'
   ];
+
+  // Efekt do obsługi zaznaczania tekstu
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection.toString()) {
+        setSelectedText(selection.toString());
+      }
+    };
+
+    document.addEventListener('mouseup', handleSelectionChange);
+    document.addEventListener('keyup', handleSelectionChange);
+
+    return () => {
+      document.removeEventListener('mouseup', handleSelectionChange);
+      document.removeEventListener('keyup', handleSelectionChange);
+    };
+  }, []);
 
   const handleSearch = async () => {
     if (!query) {
@@ -64,12 +88,74 @@ const CodeSearch = ({
     handleNotification(t('codeCopiedToClipboard'), 'success');
   };
 
+  const handleCopySelectedText = () => {
+    if (selectedText) {
+      navigator.clipboard.writeText(selectedText);
+      handleNotification(t('selectedTextCopied'), 'success');
+    } else {
+      handleNotification(t('noTextSelected'), 'warning');
+    }
+  };
+
   const handleExpandChunk = (id) => {
     setExpandedChunk(expandedChunk === id ? null : id);
   };
 
   const isChunkSelected = (id) => {
     return selectedChunks.some(chunk => chunk.id === id);
+  };
+
+  // Funkcja do renderowania kodu z możliwością zaznaczania
+  const renderSelectableCode = (code, language, chunkId) => {
+    return (
+      <Box 
+        sx={{ 
+          position: 'relative',
+          '& pre': {
+            cursor: 'text',
+            userSelect: 'text'
+          }
+        }}
+        ref={el => codeRefs.current[chunkId] = el}
+      >
+        <SyntaxHighlighter 
+          language={language} 
+          style={docco}
+          customStyle={{ 
+            maxHeight: '300px', 
+            overflow: 'auto',
+            position: 'relative',
+            zIndex: 1
+          }}
+          wrapLines={true}
+          showLineNumbers={true}
+        >
+          {code}
+        </SyntaxHighlighter>
+        
+        {selectedText && (
+          <Box sx={{ 
+            position: 'absolute', 
+            bottom: '8px', 
+            right: '8px', 
+            zIndex: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '4px',
+            padding: '4px'
+          }}>
+            <Tooltip title={t('copySelectedText')}>
+              <IconButton 
+                size="small" 
+                onClick={handleCopySelectedText}
+                color="primary"
+              >
+                <TextFields fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   return (
@@ -172,13 +258,7 @@ const CodeSearch = ({
                 
                 <Collapse in={expandedChunk === chunk.id} timeout="auto" unmountOnExit>
                   <Box sx={{ mt: 2 }}>
-                    <SyntaxHighlighter 
-                      language={chunk.language} 
-                      style={docco}
-                      customStyle={{ maxHeight: '300px', overflow: 'auto' }}
-                    >
-                      {chunk.raw}
-                    </SyntaxHighlighter>
+                    {renderSelectableCode(chunk.raw, chunk.language, chunk.id)}
                   </Box>
                 </Collapse>
               </CardContent>

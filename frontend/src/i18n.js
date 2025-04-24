@@ -216,7 +216,13 @@ const resources = {
       "enterCategoryName": "Wprowadź nazwę kategorii",
       "selectCategory": "Wybierz kategorię",
       "manageTags": "Zarządzaj tagami",
-      "manageCategories": "Zarządzaj kategoriami"
+      "manageCategories": "Zarządzaj kategoriami",
+      
+      // Nowe funkcjonalności - Zaznaczanie tekstu
+      "copySelectedText": "Kopiuj zaznaczony tekst",
+      "selectedTextCopied": "Zaznaczony tekst został skopiowany do schowka",
+      "noTextSelected": "Nie zaznaczono żadnego tekstu",
+      "selectionCleared": "Wybór został wyczyszczony"
     }
   },
   en: {
@@ -417,7 +423,7 @@ const resources = {
       "preparingExport": "Preparing export...",
       
       // New features - Tags and Categories
-      "tagsAndCategories": "Tags and categories",
+      "tagsAndCategories": "Tags and Categories",
       "addTag": "Add tag",
       "removeTag": "Remove tag",
       "createCategory": "Create category",
@@ -432,17 +438,23 @@ const resources = {
       "enterCategoryName": "Enter category name",
       "selectCategory": "Select category",
       "manageTags": "Manage tags",
-      "manageCategories": "Manage categories"
+      "manageCategories": "Manage categories",
+      
+      // New features - Text Selection
+      "copySelectedText": "Copy selected text",
+      "selectedTextCopied": "Selected text copied to clipboard",
+      "noTextSelected": "No text selected",
+      "selectionCleared": "Selection cleared"
     }
   }
 };
 
-// Inicjalizacja i18n
+// Inicjalizacja i18next
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('preferredLanguage') || 'pl', // Używaj zapisanego języka lub domyślnie polski
+    lng: localStorage.getItem('language') || 'pl', // Domyślny język
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false // React już zabezpiecza przed XSS

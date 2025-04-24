@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Box, Paper, Typography, Button, 
   Grid, Card, CardContent, 
   CardActions, TextField, Slider,
   List, ListItem, ListItemText, Chip,
   Dialog, DialogTitle, DialogContent,
-  DialogContentText, DialogActions, Divider
+  DialogContentText, DialogActions, Divider,
+  Tooltip, IconButton
 } from '@mui/material';
 import { 
   CallSplit, Merge, Build, 
-  Check, Delete, Warning 
+  Check, Delete, Warning,
+  TextFields, ContentCopy
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import EnhancedChunkManipulation from './EnhancedChunkManipulation';
@@ -28,6 +30,26 @@ const ChunkManipulation = ({
   const [mergeName, setMergeName] = useState('');
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [chunkToComplete, setChunkToComplete] = useState(null);
+  const [selectedText, setSelectedText] = useState('');
+  const codeRefs = useRef({});
+
+  // Efekt do obsługi zaznaczania tekstu
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection.toString()) {
+        setSelectedText(selection.toString());
+      }
+    };
+
+    document.addEventListener('mouseup', handleSelectionChange);
+    document.addEventListener('keyup', handleSelectionChange);
+
+    return () => {
+      document.removeEventListener('mouseup', handleSelectionChange);
+      document.removeEventListener('keyup', handleSelectionChange);
+    };
+  }, []);
 
   const handleSplitChunk = async (chunkId) => {
     if (!chunkId) {
@@ -156,6 +178,15 @@ const ChunkManipulation = ({
     handleNotification(t('selectionCleared'), 'info');
   };
 
+  const handleCopySelectedText = () => {
+    if (selectedText) {
+      navigator.clipboard.writeText(selectedText);
+      handleNotification(t('selectedTextCopied'), 'success');
+    } else {
+      handleNotification(t('noTextSelected'), 'warning');
+    }
+  };
+
   const hasSameLanguage = () => {
     if (selectedChunks.length < 2) return true;
     const firstLanguage = selectedChunks[0].language;
@@ -164,6 +195,59 @@ const ChunkManipulation = ({
 
   const hasIncompleteChunks = () => {
     return selectedChunks.some(chunk => chunk.incomplete);
+  };
+
+  // Funkcja do renderowania kodu z możliwością zaznaczania
+  const renderSelectableCode = (code, language, chunkId) => {
+    return (
+      <Box 
+        sx={{ 
+          position: 'relative',
+          '& pre': {
+            cursor: 'text',
+            userSelect: 'text'
+          }
+        }}
+        ref={el => codeRefs.current[chunkId] = el}
+      >
+        <SyntaxHighlighter 
+          language={language} 
+          style={docco}
+          customStyle={{ 
+            maxHeight: '300px', 
+            overflow: 'auto',
+            position: 'relative',
+            zIndex: 1
+          }}
+          wrapLines={true}
+          showLineNumbers={true}
+        >
+          {code}
+        </SyntaxHighlighter>
+        
+        {selectedText && (
+          <Box sx={{ 
+            position: 'absolute', 
+            bottom: '8px', 
+            right: '8px', 
+            zIndex: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: '4px',
+            padding: '4px'
+          }}>
+            <Tooltip title={t('copySelectedText')}>
+              <IconButton 
+                size="small" 
+                onClick={handleCopySelectedText}
+                color="primary"
+              >
+                <TextFields fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   return (
@@ -309,15 +393,7 @@ const ChunkManipulation = ({
                           }
                           secondary={
                             <Box sx={{ mt: 1 }}>
-                              <SyntaxHighlighter 
-                                language={chunk.language} 
-                                style={docco}
-                                customStyle={{ maxHeight: '100px', overflow: 'auto' }}
-                              >
-                                {chunk.raw.length > 200 
-                                  ? chunk.raw.substring(0, 200) + '...' 
-                                  : chunk.raw}
-                              </SyntaxHighlighter>
+                              {renderSelectableCode(chunk.raw, chunk.language, chunk.id)}
                               
                               {chunk.incomplete && (
                                 <Button 
