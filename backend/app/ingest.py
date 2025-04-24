@@ -44,9 +44,9 @@ def process_code(code, name, language, max_tokens=1000, overlap=50):
         
         # Process each chunk
         chunk_ids = []
-        for i, chunk_code in enumerate(code_chunks):
+        for i, code_chunk in enumerate(code_chunks):
             chunk_id = process_code_chunk(
-                chunk_code, 
+                code_chunk, 
                 f"{name}_chunk_{i+1}" if len(code_chunks) > 1 else name,
                 language
             )
