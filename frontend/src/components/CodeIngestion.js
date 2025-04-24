@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Paper, Typography, TextField, Button, 
   FormControl, InputLabel, Select, MenuItem,
-  Grid, Divider, Slider, FormHelperText
+  Grid, Divider, Slider, FormHelperText,
+  Card, CardContent, List, Chip, Collapse
 } from '@mui/material';
-import { UploadFile, Code } from '@mui/icons-material';
+import { UploadFile, Code, ExpandMore, ExpandLess, ContentCopy } from '@mui/icons-material';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 const CodeIngestion = ({ 
   setLoading, 
@@ -20,6 +23,8 @@ const CodeIngestion = ({
   const [maxTokens, setMaxTokens] = useState(1000);
   const [overlap, setOverlap] = useState(50);
   const [taskId, setTaskId] = useState(null);
+  const [processedChunks, setProcessedChunks] = useState([]);
+  const [expandedChunk, setExpandedChunk] = useState(null);
 
   const supportedLanguages = [
     'python', 'javascript', 'typescript', 'java', 'c', 'cpp', 'csharp', 
@@ -87,6 +92,31 @@ const CodeIngestion = ({
     }
   };
 
+  const fetchProcessedChunks = async (chunkIds) => {
+    try {
+      setLoading(true);
+      // Create a comma-separated list of chunk IDs for filtering
+      const chunkIdsStr = chunkIds.join(',');
+      
+      // Fetch all chunks at once using a custom query
+      const response = await fetch(`http://localhost:8000/search/?query=id:${chunkIdsStr}&limit=${chunkIds.length * 2}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Filter to only include the exact chunks we want
+        const filteredChunks = data.filter(chunk => chunkIds.includes(chunk.id));
+        setProcessedChunks(filteredChunks);
+        handleNotification(`Loaded ${filteredChunks.length} processed code fragments`, 'success');
+      } else {
+        handleNotification(`Error: ${data.detail || 'Failed to fetch processed chunks'}`, 'error');
+      }
+    } catch (error) {
+      handleNotification(`Error: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const checkTaskStatus = async (id) => {
     try {
       const response = await fetch(`http://localhost:8000/status/${id}`);
@@ -102,6 +132,11 @@ const CodeIngestion = ({
         setLoading(false);
         if (data.status === 'success') {
           handleNotification('Code processed successfully', 'success');
+          
+          // If processing was successful and we have chunk IDs, fetch the processed chunks
+          if (data.info && data.info.chunk_ids && data.info.chunk_ids.length > 0) {
+            fetchProcessedChunks(data.info.chunk_ids);
+          }
         } else {
           handleNotification(`Processing failed: ${data.info}`, 'error');
         }
@@ -120,12 +155,22 @@ const CodeIngestion = ({
     setLanguage('');
     setMaxTokens(1000);
     setOverlap(50);
+    setProcessedChunks([]);
     
     // Remove task from global state if exists
     if (taskId) {
       removeTask(taskId);
       setTaskId(null);
     }
+  };
+  
+  const handleExpandChunk = (id) => {
+    setExpandedChunk(expandedChunk === id ? null : id);
+  };
+  
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code);
+    handleNotification('Code copied to clipboard', 'success');
   };
 
   return (
@@ -263,6 +308,80 @@ const CodeIngestion = ({
           Reset
         </Button>
       </Box>
+      
+      {/* Processed Code Fragments Section */}
+      {processedChunks.length > 0 && (
+        <>
+          <Divider sx={{ my: 3 }} />
+          
+          <Typography variant="h6" gutterBottom>
+            Processed Code Fragments ({processedChunks.length})
+          </Typography>
+          
+          <List sx={{ mt: 2 }}>
+            {processedChunks.map((chunk) => (
+              <Card key={chunk.id} sx={{ mb: 2 }}>
+                <CardContent sx={{ pb: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6">
+                      {chunk.name}
+                    </Typography>
+                    <Box>
+                      <Chip 
+                        label={chunk.language} 
+                        size="small" 
+                        color="primary" 
+                        sx={{ mr: 1 }} 
+                      />
+                      {chunk.incomplete && (
+                        <Chip 
+                          label="Incomplete" 
+                          size="small" 
+                          color="warning" 
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {chunk.description}
+                  </Typography>
+                  
+                  <Button 
+                    size="small" 
+                    startIcon={expandedChunk === chunk.id ? <ExpandLess /> : <ExpandMore />}
+                    onClick={() => handleExpandChunk(chunk.id)}
+                    sx={{ mt: 1 }}
+                  >
+                    {expandedChunk === chunk.id ? 'Hide Code' : 'Show Code'}
+                  </Button>
+                  
+                  <Collapse in={expandedChunk === chunk.id} timeout="auto" unmountOnExit>
+                    <Box sx={{ mt: 2 }}>
+                      <SyntaxHighlighter 
+                        language={chunk.language} 
+                        style={docco}
+                        customStyle={{ maxHeight: '300px', overflow: 'auto' }}
+                      >
+                        {chunk.raw}
+                      </SyntaxHighlighter>
+                      
+                      <Button 
+                        size="small" 
+                        startIcon={<ContentCopy />}
+                        onClick={() => handleCopyCode(chunk.raw)}
+                        sx={{ mt: 1 }}
+                      >
+                        Copy Code
+                      </Button>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            ))}
+          </List>
+        </>
+      )}
     </Paper>
   );
 };
