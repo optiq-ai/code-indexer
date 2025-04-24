@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, Typography, AppBar, Toolbar, 
-  Tab, Tabs, Paper, CircularProgress, Snackbar, Alert
+  Tab, Tabs, Paper, CircularProgress, Snackbar, Alert,
+  Divider
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import CodeIngestion from './components/CodeIngestion';
 import CodeSearch from './components/CodeSearch';
 import ChunkManipulation from './components/ChunkManipulation';
 import TemplateManagement from './components/TemplateManagement';
 import TaskStatusBar from './components/TaskStatusBar';
+import LanguageSwitcher from './components/LanguageSwitcher';
+import CodeAnalysis from './components/CodeAnalysis';
+import ExportFeature from './components/ExportFeature';
+import TagsAndCategories from './components/TagsAndCategories';
+import EnhancedChunkManipulation from './components/EnhancedChunkManipulation';
 
 function App() {
+  const { t } = useTranslation();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
@@ -97,8 +105,9 @@ function App() {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Code Indexer
+            {t('appTitle')}
           </Typography>
+          <LanguageSwitcher />
         </Toolbar>
       </AppBar>
       
@@ -107,21 +116,28 @@ function App() {
         
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography variant="h5" gutterBottom>
-            Intelligent Code Library
+            {t('appTitle')}
           </Typography>
           <Typography variant="body1" paragraph>
-            Store, index, describe, and semantically search code fragments. 
-            Split, merge, and create intelligent, configurable templates.
-            Generate new code fragments or complete unfinished ones using LLM.
+            {t('appDescription', 'Store, index, describe, and semantically search code fragments. Split, merge, and create intelligent, configurable templates. Generate new code fragments or complete unfinished ones using LLM.')}
           </Typography>
         </Paper>
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="code indexer tabs">
-            <Tab label="Ingest Code" />
-            <Tab label="Search Code" />
-            <Tab label="Manipulate Chunks" />
-            <Tab label="Templates" />
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            aria-label="code indexer tabs"
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            <Tab label={t('codeIngestion')} />
+            <Tab label={t('codeSearch')} />
+            <Tab label={t('chunkManipulation')} />
+            <Tab label={t('templateManagement')} />
+            <Tab label={t('codeAnalysis')} />
+            <Tab label={t('export')} />
+            <Tab label={t('tagsAndCategories')} />
           </Tabs>
         </Box>
 
@@ -160,6 +176,30 @@ function App() {
             setLoading={setLoading} 
             handleNotification={handleNotification}
             selectedChunks={selectedChunks}
+          />
+        )}
+        
+        {tabValue === 4 && (
+          <CodeAnalysis 
+            selectedChunks={selectedChunks}
+            setLoading={setLoading} 
+            handleNotification={handleNotification}
+          />
+        )}
+        
+        {tabValue === 5 && (
+          <ExportFeature 
+            selectedChunks={selectedChunks}
+            setLoading={setLoading} 
+            handleNotification={handleNotification}
+          />
+        )}
+        
+        {tabValue === 6 && (
+          <TagsAndCategories 
+            selectedChunks={selectedChunks}
+            setLoading={setLoading} 
+            handleNotification={handleNotification}
           />
         )}
 

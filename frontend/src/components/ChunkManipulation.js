@@ -5,12 +5,14 @@ import {
   CardActions, TextField, Slider,
   List, ListItem, ListItemText, Chip,
   Dialog, DialogTitle, DialogContent,
-  DialogContentText, DialogActions
+  DialogContentText, DialogActions, Divider
 } from '@mui/material';
 import { 
   CallSplit, Merge, Build, 
   Check, Delete, Warning 
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import EnhancedChunkManipulation from './EnhancedChunkManipulation';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
@@ -20,6 +22,7 @@ const ChunkManipulation = ({
   selectedChunks,
   setSelectedChunks
 }) => {
+  const { t } = useTranslation();
   const [maxTokens, setMaxTokens] = useState(1000);
   const [overlap, setOverlap] = useState(50);
   const [mergeName, setMergeName] = useState('');
@@ -28,7 +31,7 @@ const ChunkManipulation = ({
 
   const handleSplitChunk = async (chunkId) => {
     if (!chunkId) {
-      handleNotification('Please select a chunk to split', 'error');
+      handleNotification(t('selectChunkToSplit'), 'error');
       return;
     }
 
@@ -47,14 +50,14 @@ const ChunkManipulation = ({
       const data = await response.json();
       
       if (response.ok) {
-        handleNotification(`Chunk split into ${data.child_ids.length} parts`, 'success');
+        handleNotification(t('chunkSplitSuccess', { count: data.child_ids.length }), 'success');
         // Clear selected chunks after successful operation
         setSelectedChunks([]);
       } else {
-        handleNotification(`Error: ${data.detail || 'Failed to split chunk'}`, 'error');
+        handleNotification(`${t('error')}: ${data.detail || t('failedToSplitChunk')}`, 'error');
       }
     } catch (error) {
-      handleNotification(`Error: ${error.message}`, 'error');
+      handleNotification(`${t('error')}: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -62,7 +65,7 @@ const ChunkManipulation = ({
 
   const handleMergeChunks = async () => {
     if (selectedChunks.length < 2) {
-      handleNotification('Please select at least two chunks to merge', 'error');
+      handleNotification(t('selectAtLeastTwoChunks'), 'error');
       return;
     }
 
@@ -85,15 +88,15 @@ const ChunkManipulation = ({
       const data = await response.json();
       
       if (response.ok) {
-        handleNotification('Chunks merged successfully', 'success');
+        handleNotification(t('chunksMerged'), 'success');
         setMergeName('');
         // Clear selected chunks after successful operation
         setSelectedChunks([]);
       } else {
-        handleNotification(`Error: ${data.detail || 'Failed to merge chunks'}`, 'error');
+        handleNotification(`${t('error')}: ${data.detail || t('failedToMergeChunks')}`, 'error');
       }
     } catch (error) {
-      handleNotification(`Error: ${error.message}`, 'error');
+      handleNotification(`${t('error')}: ${error.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -128,7 +131,7 @@ const ChunkManipulation = ({
       const data = await response.json();
       
       if (response.ok) {
-        handleNotification('Chunk completed successfully', 'success');
+        handleNotification(t('chunkCompletedSuccess'), 'success');
         // Update the selected chunks list to reflect the change
         setSelectedChunks(prevChunks => 
           prevChunks.map(chunk => 
@@ -138,10 +141,10 @@ const ChunkManipulation = ({
           )
         );
       } else {
-        handleNotification(`Error: ${data.detail || 'Failed to complete chunk'}`, 'error');
+        handleNotification(`${t('error')}: ${data.detail || t('failedToCompleteChunk')}`, 'error');
       }
     } catch (error) {
-      handleNotification(`Error: ${error.message}`, 'error');
+      handleNotification(`${t('error')}: ${error.message}`, 'error');
     } finally {
       setLoading(false);
       handleCloseCompleteDialog();
@@ -150,7 +153,7 @@ const ChunkManipulation = ({
 
   const handleClearSelection = () => {
     setSelectedChunks([]);
-    handleNotification('Selection cleared', 'info');
+    handleNotification(t('selectionCleared'), 'info');
   };
 
   const hasSameLanguage = () => {
@@ -164,224 +167,234 @@ const ChunkManipulation = ({
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Manipulate Code Chunks
-      </Typography>
+    <Box>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          {t('chunkManipulationTitle')}
+        </Typography>
       
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Split Chunk
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Split a single code chunk into multiple smaller chunks based on token size.
-              </Typography>
-              
-              <Box sx={{ mt: 2 }}>
-                <Typography gutterBottom>
-                  Max Tokens per Chunk: {maxTokens}
-                </Typography>
-                <Slider
-                  value={maxTokens}
-                  onChange={(e, newValue) => setMaxTokens(newValue)}
-                  min={100}
-                  max={2000}
-                  step={100}
-                  valueLabelDisplay="auto"
-                />
-              </Box>
-              
-              <Box sx={{ mt: 3 }}>
-                <Typography gutterBottom>
-                  Overlap: {overlap}
-                </Typography>
-                <Slider
-                  value={overlap}
-                  onChange={(e, newValue) => setOverlap(newValue)}
-                  min={0}
-                  max={200}
-                  step={10}
-                  valueLabelDisplay="auto"
-                />
-              </Box>
-            </CardContent>
-            <CardActions>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<CallSplit />}
-                onClick={() => handleSplitChunk(selectedChunks[0]?.id)}
-                disabled={selectedChunks.length !== 1}
-              >
-                Split Chunk
-              </Button>
-            </CardActions>
-          </Card>
-          
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Merge Chunks
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Merge multiple code chunks into a single larger chunk.
-              </Typography>
-              
-              <TextField
-                label="Name for Merged Chunk (Optional)"
-                fullWidth
-                value={mergeName}
-                onChange={(e) => setMergeName(e.target.value)}
-                margin="normal"
-              />
-              
-              {!hasSameLanguage() && (
-                <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-                  Warning: Selected chunks have different languages. Merging may result in invalid code.
-                </Typography>
-              )}
-            </CardContent>
-            <CardActions>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<Merge />}
-                onClick={handleMergeChunks}
-                disabled={selectedChunks.length < 2}
-              >
-                Merge Chunks
-              </Button>
-            </CardActions>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Selected Chunks ({selectedChunks.length})
+                  {t('splitChunk')}
                 </Typography>
-                {selectedChunks.length > 0 && (
-                  <Button 
-                    variant="outlined" 
-                    color="error" 
-                    size="small"
-                    startIcon={<Delete />}
-                    onClick={handleClearSelection}
-                  >
-                    Clear
-                  </Button>
-                )}
-              </Box>
-              
-              {selectedChunks.length > 0 ? (
-                <List sx={{ maxHeight: '400px', overflow: 'auto' }}>
-                  {selectedChunks.map((chunk) => (
-                    <ListItem key={chunk.id} divider>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            {chunk.name}
-                            <Chip 
-                              label={chunk.language} 
-                              size="small" 
-                              color="primary" 
-                              sx={{ ml: 1 }} 
-                            />
-                            {chunk.incomplete && (
-                              <Chip 
-                                label="Incomplete" 
-                                size="small" 
-                                color="warning" 
-                                sx={{ ml: 1 }} 
-                                icon={<Warning fontSize="small" />}
-                              />
-                            )}
-                          </Box>
-                        }
-                        secondary={
-                          <Box sx={{ mt: 1 }}>
-                            <SyntaxHighlighter 
-                              language={chunk.language} 
-                              style={docco}
-                              customStyle={{ maxHeight: '100px', overflow: 'auto' }}
-                            >
-                              {chunk.raw.length > 200 
-                                ? chunk.raw.substring(0, 200) + '...' 
-                                : chunk.raw}
-                            </SyntaxHighlighter>
-                            
-                            {chunk.incomplete && (
-                              <Button 
-                                size="small" 
-                                variant="outlined" 
-                                color="warning"
-                                startIcon={<Build />}
-                                onClick={() => handleOpenCompleteDialog(chunk)}
-                                sx={{ mt: 1 }}
-                              >
-                                Complete Chunk
-                              </Button>
-                            )}
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    No chunks selected. Select chunks from the Search tab.
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  {t('splitChunkDescription')}
+                </Typography>
+                
+                <Box sx={{ mt: 2 }}>
+                  <Typography gutterBottom>
+                    {t('maxTokensPerChunk')}: {maxTokens}
                   </Typography>
+                  <Slider
+                    value={maxTokens}
+                    onChange={(e, newValue) => setMaxTokens(newValue)}
+                    min={100}
+                    max={2000}
+                    step={100}
+                    valueLabelDisplay="auto"
+                  />
                 </Box>
-              )}
-            </CardContent>
-          </Card>
+                
+                <Box sx={{ mt: 3 }}>
+                  <Typography gutterBottom>
+                    {t('overlap')}: {overlap}
+                  </Typography>
+                  <Slider
+                    value={overlap}
+                    onChange={(e, newValue) => setOverlap(newValue)}
+                    min={0}
+                    max={200}
+                    step={10}
+                    valueLabelDisplay="auto"
+                  />
+                </Box>
+              </CardContent>
+              <CardActions>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  startIcon={<CallSplit />}
+                  onClick={() => handleSplitChunk(selectedChunks[0]?.id)}
+                  disabled={selectedChunks.length !== 1}
+                >
+                  {t('splitChunk')}
+                </Button>
+              </CardActions>
+            </Card>
+            
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {t('mergeChunks')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  {t('mergeChunksDescription')}
+                </Typography>
+                
+                <TextField
+                  label={t('nameForMergedChunk')}
+                  fullWidth
+                  value={mergeName}
+                  onChange={(e) => setMergeName(e.target.value)}
+                  margin="normal"
+                />
+                
+                {!hasSameLanguage() && (
+                  <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+                    {t('differentLanguagesWarning')}
+                  </Typography>
+                )}
+              </CardContent>
+              <CardActions>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  startIcon={<Merge />}
+                  onClick={handleMergeChunks}
+                  disabled={selectedChunks.length < 2}
+                >
+                  {t('mergeChunks')}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
           
-          {hasIncompleteChunks() && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Note: Some selected chunks are incomplete. You can complete them individually 
-                using the "Complete Chunk" button, or merge them with other chunks.
-              </Typography>
-            </Box>
-          )}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6" gutterBottom>
+                    {t('selectedChunks')} ({selectedChunks.length})
+                  </Typography>
+                  {selectedChunks.length > 0 && (
+                    <Button 
+                      variant="outlined" 
+                      color="error" 
+                      size="small"
+                      startIcon={<Delete />}
+                      onClick={handleClearSelection}
+                    >
+                      {t('clear')}
+                    </Button>
+                  )}
+                </Box>
+                
+                {selectedChunks.length > 0 ? (
+                  <List sx={{ maxHeight: '400px', overflow: 'auto' }}>
+                    {selectedChunks.map((chunk) => (
+                      <ListItem key={chunk.id} divider>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              {chunk.name}
+                              <Chip 
+                                label={chunk.language} 
+                                size="small" 
+                                color="primary" 
+                                sx={{ ml: 1 }} 
+                              />
+                              {chunk.incomplete && (
+                                <Chip 
+                                  label={t('incomplete')} 
+                                  size="small" 
+                                  color="warning" 
+                                  sx={{ ml: 1 }} 
+                                  icon={<Warning fontSize="small" />}
+                                />
+                              )}
+                            </Box>
+                          }
+                          secondary={
+                            <Box sx={{ mt: 1 }}>
+                              <SyntaxHighlighter 
+                                language={chunk.language} 
+                                style={docco}
+                                customStyle={{ maxHeight: '100px', overflow: 'auto' }}
+                              >
+                                {chunk.raw.length > 200 
+                                  ? chunk.raw.substring(0, 200) + '...' 
+                                  : chunk.raw}
+                              </SyntaxHighlighter>
+                              
+                              {chunk.incomplete && (
+                                <Button 
+                                  size="small" 
+                                  variant="outlined" 
+                                  color="warning"
+                                  startIcon={<Build />}
+                                  onClick={() => handleOpenCompleteDialog(chunk)}
+                                  sx={{ mt: 1 }}
+                                >
+                                  {t('completeChunk')}
+                                </Button>
+                              )}
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      {t('noChunksSelected')}
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+            
+            {hasIncompleteChunks() && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {t('incompleteChunksNote')}
+                </Typography>
+              </Box>
+            )}
+          </Grid>
         </Grid>
-      </Grid>
+      </Paper>
+      
+      <Divider sx={{ my: 4 }} />
+      
+      {/* Enhanced Chunk Manipulation */}
+      <EnhancedChunkManipulation 
+        selectedChunks={selectedChunks}
+        setLoading={setLoading}
+        handleNotification={handleNotification}
+      />
       
       {/* Complete Chunk Dialog */}
       <Dialog
         open={completeDialogOpen}
         onClose={handleCloseCompleteDialog}
       >
-        <DialogTitle>Complete Incomplete Chunk</DialogTitle>
+        <DialogTitle>{t('completeIncompleteChunk')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This will use AI to complete the incomplete code chunk. The AI will attempt to:
+            {t('completeChunkDescription')}
             <ul>
-              <li>Close all open brackets, parentheses, and braces</li>
-              <li>Complete any unfinished functions or classes</li>
-              <li>Add necessary imports if they're missing</li>
-              <li>Fix any syntax errors</li>
+              <li>{t('completeChunkAction1')}</li>
+              <li>{t('completeChunkAction2')}</li>
+              <li>{t('completeChunkAction3')}</li>
+              <li>{t('completeChunkAction4')}</li>
             </ul>
-            Do you want to proceed?
+            {t('doYouWantToProceed')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCompleteDialog} color="primary">
-            Cancel
+            {t('cancel')}
           </Button>
           <Button onClick={handleCompleteChunk} color="primary" variant="contained" startIcon={<Check />}>
-            Complete Chunk
+            {t('completeChunk')}
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 };
 

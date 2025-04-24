@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4285F4" />
+      <stop offset="100%" stop-color="#34A853" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="24" fill="#1A1A2E" />
+  <g transform="translate(32, 32)">
+    <!-- Code brackets -->
+    <path d="M20,64 L0,44 L20,24" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M108,64 L128,44 L108,24" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <!-- Search magnifying glass -->
+    <circle cx="64" cy="44" r="28" stroke="url(#gradient)" stroke-width="8" fill="none" />
+    <line x1="84" y1="64" x2="100" y2="80" stroke="url(#gradient)" stroke-width="8" stroke-linecap="round" />
+    
+    <!-- Code lines -->
+    <line x1="44" y1="44" x2="84" y2="44" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6" />
+    <line x1="54" y1="54" x2="74" y2="54" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.4" />
+    <line x1="64" y1="34" x2="74" y2="34" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.4" />
+  </g>
+</svg>
