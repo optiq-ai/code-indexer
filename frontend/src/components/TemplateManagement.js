@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Paper, Typography, Button, 
-  Grid, Divider, Card, CardContent, 
+  Grid, Card, CardContent, 
   CardActions, TextField, List, ListItem,
   ListItemText, Chip, Dialog, DialogTitle,
   DialogContent, DialogContentText, DialogActions,
@@ -9,7 +9,7 @@ import {
   TableContainer, TableHead, TableRow
 } from '@mui/material';
 import { 
-  Add, Save,
+  Add,
   PlayArrow, Visibility, VisibilityOff
 } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -30,12 +30,8 @@ const TemplateManagement = ({
   const [parameterKeys, setParameterKeys] = useState([]);
   const [viewTemplateCode, setViewTemplateCode] = useState(false);
 
-  // Fetch templates on component mount
-  useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
-
-  const fetchTemplates = async () => {
+  // Define fetchTemplates with useCallback to avoid dependency issues
+  const fetchTemplates = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('http://localhost:8000/templates/');
@@ -51,8 +47,15 @@ const TemplateManagement = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [setLoading, handleNotification]);
 
+  // Fetch templates on component mount
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
+  // Original fetchTemplates function removed to fix duplicate declaration
+  
   const handleOpenCreateDialog = () => {
     if (selectedChunks.length === 0) {
       handleNotification('Please select at least one chunk to create a template', 'error');
