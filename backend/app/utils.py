@@ -3,13 +3,12 @@ import re
 import logging
 from typing import List, Dict, Any, Optional, Tuple
 
-import openai
+from openai import OpenAI
 from fastapi import HTTPException
 
 from app.config import OPENAI_API_KEY, EMBEDDING_MODEL, COMPLETION_MODEL, SUPPORTED_LANGUAGES
 
-# Configure OpenAI API
-openai.api_key = OPENAI_API_KEY
+# OpenAI client will be instantiated in each function that needs it
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,7 +54,10 @@ def detect_language(code: str) -> str:
     
     # If no patterns match, try to use LLM to detect language
     try:
-        response = openai.ChatCompletion.create(
+        # Create a client instance for the new OpenAI API (v1.0.0+)
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
             model=COMPLETION_MODEL,
             messages=[
                 {"role": "system", "content": "You are a programming language detector. Respond with only the language name."},
@@ -123,7 +125,10 @@ def is_code(text: str) -> bool:
     
     # If all else fails, use LLM to determine if it's code
     try:
-        response = openai.ChatCompletion.create(
+        # Create a client instance for the new OpenAI API (v1.0.0+)
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
             model=COMPLETION_MODEL,
             messages=[
                 {"role": "system", "content": "You are a code detector. Respond with only 'yes' or 'no'."},
@@ -150,11 +155,15 @@ def generate_embedding(text: str) -> List[float]:
         Embedding vector as a list of floats
     """
     try:
-        response = openai.Embedding.create(
+        # Create a client instance for the new OpenAI API (v1.0.0+)
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        # Use the new API format for creating embeddings
+        response = client.embeddings.create(
             model=EMBEDDING_MODEL,
             input=text
         )
-        return response["data"][0]["embedding"]
+        return response.data[0].embedding
     except Exception as e:
         logger.error(f"Error generating embedding: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate embedding: {str(e)}")
@@ -186,7 +195,10 @@ def generate_description(code: str, language: str) -> str:
         ```
         """
         
-        response = openai.ChatCompletion.create(
+        # Create a client instance for the new OpenAI API (v1.0.0+)
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
             model=COMPLETION_MODEL,
             messages=[
                 {"role": "system", "content": "You are a code analysis expert. Provide clear, concise, and accurate descriptions of code snippets."},
@@ -231,7 +243,10 @@ def complete_code(code: str, language: str) -> str:
         ```{language}
         """
         
-        response = openai.ChatCompletion.create(
+        # Create a client instance for the new OpenAI API (v1.0.0+)
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
             model=COMPLETION_MODEL,
             messages=[
                 {"role": "system", "content": f"You are an expert {language} programmer. Complete the given code snippet."},
@@ -355,7 +370,10 @@ def is_incomplete_code(code: str, language: str) -> bool:
     
     # Use LLM to check if code is incomplete
     try:
-        response = openai.ChatCompletion.create(
+        # Create a client instance for the new OpenAI API (v1.0.0+)
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
             model=COMPLETION_MODEL,
             messages=[
                 {"role": "system", "content": "You are a code analyzer. Respond with only 'yes' or 'no'."},
